@@ -45,7 +45,7 @@ async function startServer() {
   const server = createHttpServer(app);
   const wss = new WebSocketServer({ noServer: true });
 
-  const PORT = 3000;
+  const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 
   // Serve static files in production, use Vite in development
   if (process.env.NODE_ENV !== "production") {

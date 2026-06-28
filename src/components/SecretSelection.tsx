@@ -58,7 +58,7 @@ export default function SecretSelection({
         };
 
   return (
-    <div className="w-full max-w-md mx-auto px-4 py-6 flex flex-col min-h-[90vh] justify-between text-[#e2e8f0]" id="secret-selection-root">
+    <div className="w-full h-full max-w-md mx-auto px-4 py-4 sm:py-6 flex flex-col justify-between overflow-y-auto text-[#e2e8f0] custom-scrollbar" id="secret-selection-root">
       {/* Header Info */}
       <div className="space-y-6">
         <div className="flex justify-between items-center">

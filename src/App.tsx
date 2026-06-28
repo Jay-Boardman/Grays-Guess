@@ -5,7 +5,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Wifi, Loader2, Copy, Check, Info, ArrowLeft } from 'lucide-react';
+import { Wifi, Loader2, Copy, Check, Info, ArrowLeft, Menu, X, Home, Volume2, VolumeX } from 'lucide-react';
 import { GameConfig, GuessEntry, GameScreen, GameStats } from './types';
 import LobbyScreen from './components/LobbyScreen';
 import SettingsScreen from './components/SettingsScreen';
@@ -90,6 +90,7 @@ export default function App() {
   const [currentTurn, setCurrentTurn] = useState<1 | 2>(1);
   const [winner, setWinner] = useState<1 | 2 | null>(null);
   const [nextTargetPlayer, setNextTargetPlayer] = useState<1 | 2>(1);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   // WebSocket Connection Handler for Multiplayer
   useEffect(() => {
@@ -101,8 +102,8 @@ export default function App() {
 
     function connect() {
       if (!active) return;
-      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const wsUrl = `${protocol}//${window.location.host}`;
+      const customWsUrl = (import.meta as any).env?.VITE_WS_URL;
+      const wsUrl = customWsUrl || `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}`;
       console.log(`Connecting to WebSocket: ${wsUrl}`);
       socket = new WebSocket(wsUrl);
 
@@ -352,11 +353,65 @@ export default function App() {
     setScreen('setup');
   };
 
+  const handleReturnToHome = () => {
+    audio.playConfirm();
+    haptics.vibrateSuccess();
+
+    if (ws) {
+      ws.close();
+    }
+    setWs(null);
+    setRoomState(null);
+    setConnectionError(null);
+    setMultiplayerRoomId(null);
+    setMultiplayerPlayerName(null);
+    setMultiplayerIsHost(false);
+
+    setPlayer1Secret(null);
+    setPlayer2Secret(null);
+    setPlayer1Guesses([]);
+    setPlayer2Guesses([]);
+    setCurrentTurn(1);
+    setWinner(null);
+    setNextTargetPlayer(1);
+    setScreen('setup');
+    setGameMode(null);
+    setIsMenuOpen(false);
+  };
+
+  const toggleSound = () => {
+    const nextVal = !config.soundEnabled;
+    const updated = { ...config, soundEnabled: nextVal };
+    setConfig(updated);
+    audio.setEnabled(nextVal);
+    try {
+      localStorage.setItem('guessing_game_config', JSON.stringify(updated));
+    } catch (e) {
+      console.warn(e);
+    }
+    audio.playTap();
+    haptics.vibrateLight();
+  };
+
+  const toggleHaptics = () => {
+    const nextVal = !config.hapticsEnabled;
+    const updated = { ...config, hapticsEnabled: nextVal };
+    setConfig(updated);
+    haptics.setEnabled(nextVal);
+    try {
+      localStorage.setItem('guessing_game_config', JSON.stringify(updated));
+    } catch (e) {
+      console.warn(e);
+    }
+    audio.playTap();
+    haptics.vibrateMedium();
+  };
+
   return (
-    <div className="min-h-screen gradient-bg text-[#e2e8f0] flex flex-col justify-start overflow-x-hidden antialiased" id="game-app-container">
+    <div className="h-full w-full gradient-bg text-[#e2e8f0] flex flex-col justify-between overflow-hidden antialiased select-none" id="game-app-container">
       
       {/* Dynamic Screen Mounting with Smooth Framer Motion transitions */}
-      <main className="flex-grow flex items-center justify-center py-4 w-full" id="main-content-stage">
+      <main className="flex-grow flex-shrink min-h-0 w-full overflow-hidden" id="main-content-stage">
         <AnimatePresence mode="wait">
           {gameMode === null ? (
             <motion.div
@@ -755,6 +810,151 @@ export default function App() {
           )}
         </AnimatePresence>
       </main>
+
+      {/* Floating Global Menu Button */}
+      <div className="fixed top-4 right-4 z-50 flex items-center gap-2">
+        <button
+          id="global-menu-trigger"
+          onClick={() => {
+            audio.playTap();
+            haptics.vibrateLight();
+            setIsMenuOpen(!isMenuOpen);
+          }}
+          className="w-10 h-10 flex items-center justify-center rounded-xl bg-black/40 border border-white/10 hover:border-cyan-400/50 hover:bg-black/60 text-gray-300 hover:text-white transition-all cursor-pointer backdrop-blur-md shadow-md"
+          title="Game Control Menu"
+          aria-label="Toggle Menu"
+          type="button"
+        >
+          {isMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+        </button>
+      </div>
+
+      {/* Immersive Game Menu Overlay */}
+      <AnimatePresence>
+        {isMenuOpen && (
+          <motion.div
+            key="immersive-game-menu"
+            id="immersive-game-menu-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
+            className="fixed inset-0 z-40 bg-black/85 backdrop-blur-md flex items-center justify-center p-6"
+            onClick={() => setIsMenuOpen(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, y: 15 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.95, y: 15 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 350 }}
+              className="w-full max-w-sm glass rounded-3xl p-6 border border-white/10 space-y-6 flex flex-col relative"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Header */}
+              <div className="text-center pb-2 border-b border-white/5">
+                <h3 className="text-xl font-black uppercase tracking-wider italic text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-indigo-400">
+                  DUO GUESS CONTROL
+                </h3>
+                <p className="text-[10px] font-mono uppercase tracking-widest text-gray-400 mt-1">
+                  Pause & Setup Settings
+                </p>
+              </div>
+
+              {/* Quick Settings Toggles */}
+              <div className="space-y-3">
+                <div className="text-xs font-mono uppercase tracking-widest text-gray-400 font-bold mb-1">
+                  Quick Settings
+                </div>
+                
+                {/* Sound toggle */}
+                <button
+                  onClick={toggleSound}
+                  className="w-full flex items-center justify-between p-3.5 rounded-2xl bg-white/5 border border-white/5 hover:border-white/10 hover:bg-white/10 transition-all text-left cursor-pointer font-sans"
+                  type="button"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`p-2 rounded-xl ${config.soundEnabled ? 'bg-cyan-500/10 text-cyan-400' : 'bg-gray-500/10 text-gray-400'}`}>
+                      {config.soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+                    </div>
+                    <div>
+                      <div className="text-xs font-bold text-white uppercase tracking-wider">SOUND EFFECTS</div>
+                      <div className="text-[10px] text-gray-400 font-mono">Feedback and play events</div>
+                    </div>
+                  </div>
+                  <div className={`text-[10px] font-mono font-bold uppercase px-2 py-1 rounded-md ${config.soundEnabled ? 'bg-cyan-500/10 text-cyan-400' : 'bg-white/5 text-gray-500'}`}>
+                    {config.soundEnabled ? 'ACTIVE' : 'MUTED'}
+                  </div>
+                </button>
+
+                {/* Haptic toggle */}
+                <button
+                  onClick={toggleHaptics}
+                  className="w-full flex items-center justify-between p-3.5 rounded-2xl bg-white/5 border border-white/5 hover:border-white/10 hover:bg-white/10 transition-all text-left cursor-pointer font-sans"
+                  type="button"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`p-2 rounded-xl ${config.hapticsEnabled ? 'bg-fuchsia-500/10 text-fuchsia-400' : 'bg-gray-500/10 text-gray-400'}`}>
+                      <Info className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <div className="text-xs font-bold text-white uppercase tracking-wider">HAPTIC SHAKE</div>
+                      <div className="text-[10px] text-gray-400 font-mono">Physical touch vibration</div>
+                    </div>
+                  </div>
+                  <div className={`text-[10px] font-mono font-bold uppercase px-2 py-1 rounded-md ${config.hapticsEnabled ? 'bg-fuchsia-500/10 text-fuchsia-400' : 'bg-white/5 text-gray-500'}`}>
+                    {config.hapticsEnabled ? 'ACTIVE' : 'MUTED'}
+                  </div>
+                </button>
+              </div>
+
+              {/* Mode & Status */}
+              <div className="glass p-4 rounded-2xl border border-white/5 space-y-2">
+                <div className="text-xs font-mono uppercase tracking-widest text-gray-400 font-bold">
+                  Game Diagnostics
+                </div>
+                <div className="grid grid-cols-2 gap-2 text-[11px] font-mono">
+                  <div className="bg-black/30 p-2 rounded-lg">
+                    <span className="text-gray-500 block">CURRENT MODE</span>
+                    <span className="font-bold text-white uppercase">
+                      {gameMode === 'multiplayer' ? 'Multiplayer' : gameMode === 'local' ? 'Local Pass' : 'Lobby'}
+                    </span>
+                  </div>
+                  <div className="bg-black/30 p-2 rounded-lg">
+                    <span className="text-gray-500 block">SCREEN PHASE</span>
+                    <span className="font-bold text-white uppercase">
+                      {gameMode === 'multiplayer' ? (roomState?.status || 'joining') : screen}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Navigation Actions */}
+              <div className="space-y-2.5 pt-2 font-sans">
+                <button
+                  onClick={handleReturnToHome}
+                  className="w-full py-3.5 px-4 bg-gradient-to-r from-cyan-500 to-indigo-500 text-white font-bold rounded-2xl shadow-lg hover:from-cyan-400 hover:to-indigo-400 transition-all cursor-pointer uppercase tracking-wider text-xs text-center flex items-center justify-center gap-2"
+                  type="button"
+                >
+                  <Home className="w-4 h-4" />
+                  <span>Return to Home Screen</span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    audio.playTap();
+                    haptics.vibrateLight();
+                    setIsMenuOpen(false);
+                  }}
+                  className="w-full py-3 px-4 bg-white/5 border border-white/10 hover:bg-white/10 text-gray-300 hover:text-white font-bold rounded-2xl transition-all cursor-pointer uppercase tracking-wider text-xs text-center"
+                  type="button"
+                >
+                  Close Menu
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Humble Footer containing absolute literal description, clean margins */}
       <footer className="py-4 border-t border-white/5 bg-black/40 text-center text-[10px] text-gray-500 font-mono tracking-widest uppercase" id="page-footer">

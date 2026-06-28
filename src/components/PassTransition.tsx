@@ -45,7 +45,7 @@ export default function PassTransition({
       };
 
   return (
-    <div className="w-full max-w-md mx-auto px-4 py-8 flex flex-col min-h-[90vh] justify-between text-center text-[#e2e8f0]" id="pass-transition-root">
+    <div className="w-full h-full max-w-md mx-auto px-4 py-4 sm:py-6 flex flex-col justify-between overflow-y-auto text-center text-[#e2e8f0] custom-scrollbar" id="pass-transition-root">
       {/* Top Banner / Notice */}
       <div className="space-y-4">
         <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-500/10 text-amber-400 text-[10px] font-mono font-bold uppercase tracking-widest rounded-full border border-amber-500/30 mx-auto animate-pulse" id="privacy-badge">

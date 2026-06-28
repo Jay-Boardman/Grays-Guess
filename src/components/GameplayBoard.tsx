@@ -85,7 +85,7 @@ export default function GameplayBoard({
   const maxPercent = Math.max(0, Math.min(100, (maxPossible / maxNumber) * 100));
 
   return (
-    <div className="w-full max-w-md mx-auto px-4 py-4 flex flex-col min-h-[92vh] justify-between text-[#e2e8f0]" id="gameplay-board-root">
+    <div className="w-full h-full max-w-md mx-auto px-4 py-3 sm:py-5 flex flex-col justify-between overflow-y-auto text-[#e2e8f0] custom-scrollbar" id="gameplay-board-root">
       {/* Top turn indicator and helper stats */}
       <div className="space-y-4">
         <div className="flex justify-between items-center glass px-4 py-3 rounded-2xl animate-pulse" id="turn-banner">

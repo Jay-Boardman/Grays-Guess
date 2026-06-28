@@ -72,7 +72,7 @@ export default function SettingsScreen({
   };
 
   return (
-    <div className="w-full max-w-md mx-auto px-4 py-6 flex flex-col min-h-[90vh] justify-between text-[#e2e8f0]" id="settings-screen-root">
+    <div className="w-full h-full max-w-md mx-auto px-4 py-4 sm:py-6 flex flex-col justify-between overflow-y-auto text-[#e2e8f0] custom-scrollbar" id="settings-screen-root">
       {/* Header and Logo */}
       <div className="space-y-6">
         <div className="text-center space-y-2">

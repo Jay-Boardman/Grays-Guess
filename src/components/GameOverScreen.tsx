@@ -134,7 +134,7 @@ export default function GameOverScreen({
       };
 
   return (
-    <div className="w-full max-w-md mx-auto px-4 py-6 flex flex-col min-h-[92vh] justify-between relative text-[#e2e8f0]" id="game-over-root">
+    <div className="w-full h-full max-w-md mx-auto px-4 py-4 sm:py-6 flex flex-col justify-between relative overflow-y-auto text-[#e2e8f0] custom-scrollbar" id="game-over-root">
       {/* Background canvas confetti */}
       <canvas
         ref={canvasRef}
