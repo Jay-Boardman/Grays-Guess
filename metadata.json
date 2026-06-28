@@ -1,0 +1,8 @@
+{
+  "name": "Guessing Game",
+  "description": "A mobile-optimized local multiplayer guessing game for two players. Set secret numbers and take turns guessing with higher/lower feedback, beautiful animations, and pass-and-play screen privacy.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
